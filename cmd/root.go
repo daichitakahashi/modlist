@@ -6,8 +6,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/rand"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -27,6 +29,11 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
+		if shuffleModules != nil && *shuffleModules {
+			rand.Shuffle(len(list), func(i, j int) {
+				list[i], list[j] = list[j], list[i]
+			})
+		}
 		for _, mod := range list {
 			fmt.Println(mod)
 		}
@@ -43,6 +50,10 @@ func Execute() {
 	}
 }
 
+var (
+	shuffleModules *bool
+)
+
 func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -52,5 +63,6 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rand.Seed(uint64(time.Now().UnixNano()))
+	shuffleModules = rootCmd.Flags().BoolP("shuffle", "s", false, "shuffle module list")
 }
