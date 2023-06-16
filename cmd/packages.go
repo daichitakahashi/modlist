@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/rand"
 )
 
 // packagesCmd represents the packages command
@@ -30,12 +31,21 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
+		if shufflePackages != nil && *shufflePackages {
+			rand.Shuffle(len(list), func(i, j int) {
+				list[i], list[j] = list[j], list[i]
+			})
+		}
 		for _, pkg := range list {
 			fmt.Println(pkg)
 		}
 		return nil
 	},
 }
+
+var (
+	shufflePackages *bool
+)
 
 func init() {
 	rootCmd.AddCommand(packagesCmd)
@@ -49,4 +59,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// packagesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	shufflePackages = packagesCmd.Flags().BoolP("shuffle", "s", false, "")
 }
