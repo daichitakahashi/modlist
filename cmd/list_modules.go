@@ -11,7 +11,7 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-func listModules(pkg bool) ([]string, error) {
+func listModules() ([]string, error) {
 	result, err := exec.Command("go", "env", "GOWORK").CombinedOutput()
 	if err != nil {
 		log.Println(string(result))
@@ -27,10 +27,6 @@ func listModules(pkg bool) ([]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to load module paths from %s: %w", workPath, err)
 		}
-	}
-
-	if !pkg {
-		return modulePaths, nil
 	}
 
 	modules := make([]string, 0, len(modulePaths))
@@ -77,18 +73,4 @@ func loadModuleName(modDir string) (string, bool, error) {
 		return "", false, err
 	}
 	return mod.Module.Mod.String(), true, nil
-}
-
-func expand(ss []string, fn func(s string) ([]string, error)) ([]string, error) {
-	var result []string
-	for _, s := range ss {
-		r, err := fn(s)
-		if err != nil {
-			return nil, err
-		}
-		if len(r) > 0 {
-			result = append(result, r...)
-		}
-	}
-	return result, nil
 }
