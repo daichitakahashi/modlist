@@ -32,22 +32,44 @@ func TestListModules(t *testing.T) {
 	t.Run("single", func(t *testing.T) {
 		chdir(t, "./testdata/single")
 
-		list, err := listModules()
-		assert.NilError(t, err)
-		assert.DeepEqual(t, list, []string{
-			"example.com/single",
+		t.Run("path", func(t *testing.T) {
+			list, err := listModules(false)
+			assert.NilError(t, err)
+			assert.DeepEqual(t, list, []string{
+				".",
+			})
+		})
+
+		t.Run("name", func(t *testing.T) {
+			list, err := listModules(true)
+			assert.NilError(t, err)
+			assert.DeepEqual(t, list, []string{
+				"example.com/single",
+			})
 		})
 	})
 
 	t.Run("multi", func(t *testing.T) {
 		chdir(t, "./testdata/multi")
 
-		list, err := listModules()
-		assert.NilError(t, err)
-		assert.DeepEqual(t, list, []string{
-			"example.com/multi",
-			"example.com/multi/module1",
-			"example.com/multi/module2",
+		t.Run("path", func(t *testing.T) {
+			list, err := listModules(false)
+			assert.NilError(t, err)
+			assert.DeepEqual(t, list, []string{
+				".",
+				"./module1",
+				"./module2",
+			})
+		})
+
+		t.Run("name", func(t *testing.T) {
+			list, err := listModules(true)
+			assert.NilError(t, err)
+			assert.DeepEqual(t, list, []string{
+				"example.com/multi",
+				"example.com/multi/module1",
+				"example.com/multi/module2",
+			})
 		})
 	})
 }
