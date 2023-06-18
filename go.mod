@@ -3,6 +3,7 @@ module github.com/daichitakahashi/modlist
 go 1.20
 
 require (
+	github.com/IGLOU-EU/go-wildcard v1.0.3
 	github.com/spf13/cobra v1.7.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/mod v0.11.0

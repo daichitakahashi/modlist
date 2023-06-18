@@ -5,9 +5,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+	"log"
 	"time"
 
+	"github.com/IGLOU-EU/go-wildcard"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/rand"
 )
@@ -29,13 +30,30 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-		if shuffleModules != nil && *shuffleModules {
+		if packages != nil && *packages {
+			list, err = expand(list, func(s string) ([]string, error) {
+				return listPackages(s)
+			})
+			if err != nil {
+				return err
+			}
+		}
+		if shuffle != nil && *shuffle {
+			rand.Seed(uint64(time.Now().UnixNano()))
 			rand.Shuffle(len(list), func(i, j int) {
 				list[i], list[j] = list[j], list[i]
 			})
 		}
-		for _, mod := range list {
-			fmt.Println(mod)
+		for _, item := range list {
+			_match, tested := match(item, matchPatterns)
+			if tested && !_match {
+				continue
+			}
+			_match, tested = match(item, excludePatterns)
+			if tested && _match {
+				continue
+			}
+			fmt.Println(item)
 		}
 		return nil
 	},
@@ -46,12 +64,15 @@ to quickly create a Cobra application.`,
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
 var (
-	shuffleModules *bool
+	packages        *bool
+	shuffle         *bool
+	matchPatterns   *[]string
+	excludePatterns *[]string
 )
 
 func init() {
@@ -63,6 +84,20 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rand.Seed(uint64(time.Now().UnixNano()))
-	shuffleModules = rootCmd.Flags().BoolP("shuffle", "s", false, "shuffle module list")
+	packages = rootCmd.Flags().BoolP("packages", "p", false, "")
+	shuffle = rootCmd.Flags().BoolP("shuffle", "s", false, "shuffle module list")
+	matchPatterns = rootCmd.Flags().StringArrayP("match", "m", nil, "filter unmatch items")
+	excludePatterns = rootCmd.Flags().StringArrayP("exclude", "e", nil, "filter match items")
+}
+
+func match(s string, patterns *[]string) (match, tested bool) {
+	if patterns == nil || len(*patterns) == 0 {
+		return false, false
+	}
+	for _, p := range *patterns {
+		if wildcard.MatchSimple(p, s) {
+			return true, true
+		}
+	}
+	return false, true
 }
