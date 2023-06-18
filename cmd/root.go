@@ -39,6 +39,7 @@ var rootCmd = &cobra.Command{
 				list[i], list[j] = list[j], list[i]
 			})
 		}
+		filtered := make([]string, 0, len(list))
 		for _, item := range list {
 			_match, tested := match(item, matchPatterns)
 			if tested && !_match {
@@ -48,8 +49,16 @@ var rootCmd = &cobra.Command{
 			if tested && _match {
 				continue
 			}
-			fmt.Println(item)
+			filtered = append(filtered, item)
 		}
+		lastIdx := len(filtered) - 1
+		for idx, item := range filtered {
+			fmt.Print(item)
+			if idx != lastIdx {
+				fmt.Print(*separator)
+			}
+		}
+		fmt.Print("\n")
 		return nil
 	},
 }
@@ -68,6 +77,7 @@ var (
 	shuffle         *bool
 	matchPatterns   *[]string
 	excludePatterns *[]string
+	separator       *string
 )
 
 func init() {
@@ -83,6 +93,7 @@ func init() {
 	shuffle = rootCmd.Flags().BoolP("shuffle", "s", false, "shuffle module list")
 	matchPatterns = rootCmd.Flags().StringArrayP("match", "m", nil, "filter unmatch items")
 	excludePatterns = rootCmd.Flags().StringArrayP("exclude", "e", nil, "filter match items")
+	separator = rootCmd.Flags().String("separator", "\n", "separator")
 }
 
 func match(s string, patterns *[]string) (match, tested bool) {
