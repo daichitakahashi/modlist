@@ -66,7 +66,7 @@ example.com/multi/package2
 
 Test your all packages and get coverages without internal package.
 ```shell
-$ go test -coverpkg=`modlist -p --separator=","` `modlist -p -s`
+$ go test -coverpkg=`modlist -p -e="*internal*" --separator=","` `modlist -p -s`
 ok      example.com/multi/module2       0.115s  coverage: [no statements]
 ok      example.com/multi/package1      0.221s  coverage: [no statements]
 ok      example.com/multi/module1/package2      0.325s  coverage: [no statements]
