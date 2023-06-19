@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,15 +31,20 @@ loop:
 	return result, nil
 }
 
+func goList(args ...string) ([]byte, error) {
+	cmd := exec.Command("go", append([]string{"list"}, args...)...)
+	cmd.Stderr = os.Stderr
+	return cmd.Output()
+}
+
 func listPackageNames(modDir string) ([]string, error) {
-	result, err := exec.Command("go", "list", fmt.Sprintf("%s%s...", modDir, string(os.PathSeparator))).CombinedOutput()
+	data, err := goList(fmt.Sprintf("%s%s...", modDir, string(os.PathSeparator)))
 	if err != nil {
-		log.Println(string(result))
 		return nil, err
 	}
 
 	var packageNames []string
-	for _, line := range bytes.Split(result, []byte{'\n'}) {
+	for _, line := range bytes.Split(data, []byte{'\n'}) {
 		line = bytes.TrimSpace(line)
 		if len(line) > 0 {
 			packageNames = append(packageNames, string(line))
@@ -56,17 +60,16 @@ func listPackagePaths(modDir string) ([]string, error) {
 		return nil, err
 	}
 
-	result, err := exec.Command("go", "list",
+	data, err := goList(
 		"-f", "{{ .Dir }}",
 		fmt.Sprintf("%s%s...", modDir, string(os.PathSeparator)),
-	).CombinedOutput()
+	)
 	if err != nil {
-		log.Println(string(result))
 		return nil, err
 	}
 
 	var packagePaths []string
-	for _, line := range bytes.Split(result, []byte{'\n'}) {
+	for _, line := range bytes.Split(data, []byte{'\n'}) {
 		line = bytes.TrimSpace(line)
 		if len(line) > 0 {
 			path, err := filepath.Rel(wd, string(line))
