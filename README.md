@@ -85,3 +85,4 @@ ok      example.com/multi/module1/package1      1.446s  coverage: [no statements
 |`--match`|`-m`||Exclude unmatch items|
 |`--exclude`|`-e`||Exclude match items|
 |`--separator`||"\n"|Change separator|
+|`--directory`|`-d`|false|Show module/package paths instead of their names|

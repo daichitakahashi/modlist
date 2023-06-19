@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -31,10 +32,34 @@ loop:
 	return result, nil
 }
 
-func listPackages(modDir string) ([]string, error) {
-	pkg := !strings.HasPrefix(modDir, ".")
-
+func listPackageNames(modDir string) ([]string, error) {
 	result, err := exec.Command("go", "list", fmt.Sprintf("%s%s...", modDir, string(os.PathSeparator))).CombinedOutput()
+	if err != nil {
+		log.Println(string(result))
+		return nil, err
+	}
+
+	var packageNames []string
+	for _, line := range bytes.Split(result, []byte{'\n'}) {
+		line = bytes.TrimSpace(line)
+		if len(line) > 0 {
+			packageNames = append(packageNames, string(line))
+		}
+	}
+
+	return packageNames, nil
+}
+
+func listPackagePaths(modDir string) ([]string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := exec.Command("go", "list",
+		"-f", "{{ .Dir }}",
+		fmt.Sprintf("%s%s...", modDir, string(os.PathSeparator)),
+	).CombinedOutput()
 	if err != nil {
 		log.Println(string(result))
 		return nil, err
@@ -44,14 +69,16 @@ func listPackages(modDir string) ([]string, error) {
 	for _, line := range bytes.Split(result, []byte{'\n'}) {
 		line = bytes.TrimSpace(line)
 		if len(line) > 0 {
-			packagePaths = append(packagePaths, string(line))
+			path, err := filepath.Rel(wd, string(line))
+			if err != nil {
+				return nil, err
+			}
+			if !strings.HasPrefix(path, ".") {
+				path = fmt.Sprintf(".%s%s", string(os.PathSeparator), path)
+			}
+			packagePaths = append(packagePaths, path)
 		}
 	}
-	if pkg {
-		return packagePaths, nil
-	}
 
-	log.Println(modDir, packagePaths)
-
-	return nil, nil
+	return packagePaths, nil
 }
