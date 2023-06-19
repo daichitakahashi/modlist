@@ -1,0 +1,4 @@
+run:
+  skip-dirs:
+    - package2
+  skip-dirs-use-default: true
