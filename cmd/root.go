@@ -6,9 +6,10 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
-	"github.com/IGLOU-EU/go-wildcard"
+	"github.com/daichitakahashi/modlist/internal/golangci"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/rand"
 )
@@ -44,14 +45,35 @@ var rootCmd = &cobra.Command{
 				list[i], list[j] = list[j], list[i]
 			})
 		}
+
+		f := filters([]filterFunc{})
+		if matchPatterns != nil && len(*matchPatterns) > 0 {
+			f = append(f, matchFilter(*matchPatterns))
+		}
+		if excludePatterns != nil && len(*excludePatterns) > 0 {
+			f = append(f, excludeFilter(*excludePatterns))
+		}
+		if golangCILintSkipDirs != nil && *golangCILintSkipDirs {
+			cfg, err := golangci.ReadConfig()
+			if err != nil {
+				if os.IsNotExist(err) {
+					log.Println("golangci-lint configuration file not found")
+				} else {
+					return err
+				}
+			}
+			if err == nil {
+				rxs, err := cfg.SkipDirectories()
+				if err != nil {
+					return err
+				}
+				f = append(f, excludeRegexpFilter(rxs))
+			}
+		}
+
 		filtered := make([]string, 0, len(list))
 		for _, item := range list {
-			_match, tested := match(item, matchPatterns)
-			if tested && !_match {
-				continue
-			}
-			_match, tested = match(item, excludePatterns)
-			if tested && _match {
+			if f.excluded(item) {
 				continue
 			}
 			filtered = append(filtered, item)
@@ -78,12 +100,13 @@ func Execute() {
 }
 
 var (
-	packages        *bool
-	shuffle         *bool
-	matchPatterns   *[]string
-	excludePatterns *[]string
-	separator       *string
-	directoryPath   *bool
+	packages             *bool
+	shuffle              *bool
+	matchPatterns        *[]string
+	excludePatterns      *[]string
+	separator            *string
+	directoryPath        *bool
+	golangCILintSkipDirs *bool
 )
 
 func init() {
@@ -101,16 +124,5 @@ func init() {
 	excludePatterns = rootCmd.Flags().StringArrayP("exclude", "e", nil, "filter match items")
 	separator = rootCmd.Flags().String("separator", "\n", "separator")
 	directoryPath = rootCmd.Flags().BoolP("directory", "d", false, "show directory instead of module/package name")
-}
-
-func match(s string, patterns *[]string) (match, tested bool) {
-	if patterns == nil || len(*patterns) == 0 {
-		return false, false
-	}
-	for _, p := range *patterns {
-		if wildcard.MatchSimple(p, s) {
-			return true, true
-		}
-	}
-	return false, true
+	golangCILintSkipDirs = rootCmd.Flags().Bool("golangci-lint-skip-dirs", false, "if configuration file exists, read run.skip-dirs and run.skip-dirs-use-default option")
 }

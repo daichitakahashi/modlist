@@ -1,0 +1,4 @@
+run:
+  skip-dirs:
+    - internal
+  skip-dirs-use-default: true
