@@ -110,19 +110,12 @@ var (
 )
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.modlist.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	packages = rootCmd.Flags().BoolP("packages", "p", false, "")
-	shuffle = rootCmd.Flags().BoolP("shuffle", "s", false, "shuffle module list")
-	matchPatterns = rootCmd.Flags().StringArrayP("match", "m", nil, "filter unmatch items")
-	excludePatterns = rootCmd.Flags().StringArrayP("exclude", "e", nil, "filter match items")
-	separator = rootCmd.Flags().String("separator", "\n", "separator")
-	directoryPath = rootCmd.Flags().BoolP("directory", "d", false, "show directory instead of module/package name")
-	golangCILintSkipDirs = rootCmd.Flags().Bool("golangci-lint-skip-dirs", false, "if configuration file exists, read run.skip-dirs and run.skip-dirs-use-default option")
+	flags := rootCmd.Flags()
+	packages = flags.BoolP("packages", "p", false, "list all packages instead of modules")
+	shuffle = flags.BoolP("shuffle", "s", false, "shuffle output")
+	matchPatterns = flags.StringArrayP("match", "m", nil, "exclude unmatch items")
+	excludePatterns = flags.StringArrayP("exclude", "e", nil, "exclude match items")
+	separator = flags.String("separator", "\n", "output separator")
+	directoryPath = flags.BoolP("directory", "d", false, "show module/package paths instead of their names")
+	golangCILintSkipDirs = flags.Bool("golangci-lint-skip-dirs", false, "if configuration file exists, read run.skip-dirs and run.skip-dirs-use-default options")
 }
