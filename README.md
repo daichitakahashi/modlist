@@ -86,3 +86,4 @@ ok      example.com/multi/module1/package1      1.446s  coverage: [no statements
 |`--exclude`|`-e`||Exclude match items|
 |`--separator`||"\n"|Change separator|
 |`--directory`|`-d`|false|Show module/package paths instead of their names|
+|`--golangci-lint-skip-dirs`||false|If configuration file of [golangci-lint](https://golangci-lint.run/usage/configuration/) exists, read `run.skip-dirs` and `run.skip-dirs-use-default` option|
