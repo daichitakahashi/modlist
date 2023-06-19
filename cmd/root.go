@@ -21,13 +21,18 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
-		list, err := listModules()
+		dir := directoryPath != nil && *directoryPath
+
+		list, err := listModules(dir)
 		if err != nil {
 			return err
 		}
 		if packages != nil && *packages {
 			list, err = expand(list, func(s string) ([]string, error) {
-				return listPackages(s)
+				if dir {
+					return listPackagePaths(s)
+				}
+				return listPackageNames(s)
 			})
 			if err != nil {
 				return err
@@ -78,6 +83,7 @@ var (
 	matchPatterns   *[]string
 	excludePatterns *[]string
 	separator       *string
+	directoryPath   *bool
 )
 
 func init() {
@@ -94,6 +100,7 @@ func init() {
 	matchPatterns = rootCmd.Flags().StringArrayP("match", "m", nil, "filter unmatch items")
 	excludePatterns = rootCmd.Flags().StringArrayP("exclude", "e", nil, "filter match items")
 	separator = rootCmd.Flags().String("separator", "\n", "separator")
+	directoryPath = rootCmd.Flags().BoolP("directory", "d", false, "show directory instead of module/package name")
 }
 
 func match(s string, patterns *[]string) (match, tested bool) {
